@@ -1,0 +1,57 @@
+name: CI Pipeline for Crypto Exchange
+run-name: ${{ github.actor }} is running the CI pipeline for Crypto Exchange
+
+on:
+    push:
+        branches: [develop, main]
+    pull_request:
+        branches: [develop, main]
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                node-version: [18, 20]
+                os: [ubuntu-latest]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 9
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'pnpm'
+
+            - name: Cache node_modules
+              uses: actions/cache@v3
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
+            - name: Install dependencies
+              run: pnpm install
+
+            - name: Check formatting with Prettier
+              run: pnpm run format
+
+            - name: Lint code with ESLint
+              run: pnpm run lint
+
+            - name: Lint styles with Stylelint
+              run: pnpm run stylelint
+
+            - name: Build project with Vite
+              run: pnpm run build
+
+            - name: Display job status
+              run: echo "The job's status is ${{ job.status }} on Node.js ${{ matrix.node-version }} and ${{ matrix.os }}."

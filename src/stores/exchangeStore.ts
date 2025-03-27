@@ -39,7 +39,7 @@ class ExchangeStore {
                 this.fromCurrency = fromCurrency || 'BTC'
                 this.toCurrency = toCurrency || 'ETH'
                 this.amount = amount || 1
-                this.result = result || 1 // Загружаем сохраненный результат
+                this.result = result || 1
             })
         } catch (error) {
             console.error('Ошибка загрузки из localStorage:', error)
@@ -54,7 +54,7 @@ class ExchangeStore {
                     fromCurrency: this.fromCurrency,
                     toCurrency: this.toCurrency,
                     amount: this.amount,
-                    result: this.result, // Сохраняем результат тоже
+                    result: this.result,
                 }),
             )
         } catch (error) {
@@ -93,7 +93,7 @@ class ExchangeStore {
         if (cachedRate && Date.now() - cachedRate.timestamp < EXCHANGE_CACHE_TTL) {
             runInAction(() => {
                 this.result = cachedRate.rate * amount
-                this.saveState() // Сохраняем при использовании кеша
+                this.saveState()
             })
             return
         }
@@ -109,7 +109,7 @@ class ExchangeStore {
             runInAction(() => {
                 this.result = rate * amount
                 this.ratesCache.set(cacheKey, { rate, timestamp: Date.now() })
-                this.saveState() // Сохраняем после нового расчета
+                this.saveState()
             })
         } catch (error) {
             runInAction(() => {
@@ -122,7 +122,7 @@ class ExchangeStore {
         if (value <= 0) return
         runInAction(() => {
             this.amount = value
-            this.saveState() // Сохраняем сразу при изменении
+            this.saveState()
         })
         this.fetchConversion()
     }

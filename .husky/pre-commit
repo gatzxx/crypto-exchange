@@ -1,0 +1,14 @@
+pnpm run format || {
+  echo "❌ Prettier check failed. Please run 'pnpm run format:fix' to fix formatting issues."
+  exit 1
+}
+
+pnpm run lint || {
+  echo "❌ ESLint check failed. Please run 'pnpm run lint:fix' to fix linting issues."
+  exit 1
+}
+
+pnpm run stylelint || {
+  echo "❌ Stylelint check failed. Please run 'pnpm run stylelint:fix' to fix styling issues."
+  exit 1
+}

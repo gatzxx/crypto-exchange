@@ -3,5 +3,5 @@ export const App = () => {
         <main>
             <h1>Crypto Exchange</h1>
         </main>
-    );
-};
+    )
+}

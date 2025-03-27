@@ -1,26 +1,51 @@
 {
-  "name": "crypto-exchange",
-  "version": "1.0.0",
-  "description": "A modern cryptocurrency exchange platform",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit"
-  },
-  "keywords": ["crypto", "exchange", "vite", "react", "typescript"],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.8.2",
-    "vite": "^6.2.3"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  }
+    "name": "crypto-exchange",
+    "version": "1.0.0",
+    "description": "A modern cryptocurrency exchange platform",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "type-check": "tsc --noEmit",
+        "format": "prettier --check .",
+        "format:fix": "prettier --write .",
+        "lint": "eslint --ext .js,.ts,.jsx,.tsx .",
+        "lint:fix": "eslint --ext .js,.ts,.jsx,.tsx . --fix",
+        "stylelint": "stylelint \"src/**/*.{css,scss}\"",
+        "stylelint:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
+        "fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run stylelint:fix"
+    },
+    "keywords": [
+        "crypto",
+        "exchange",
+        "vite",
+        "react",
+        "typescript"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/react": "^19.0.12",
+        "@types/react-dom": "^19.0.4",
+        "@typescript-eslint/eslint-plugin": "^8.28.0",
+        "@typescript-eslint/parser": "^8.28.0",
+        "@vitejs/plugin-react": "^4.3.4",
+        "eslint": "^9.23.0",
+        "eslint-config-prettier": "^10.1.1",
+        "eslint-plugin-import": "^2.31.0",
+        "eslint-plugin-prettier": "^5.2.5",
+        "eslint-plugin-react": "^7.37.4",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "prettier": "^3.5.3",
+        "stylelint": "^16.17.0",
+        "stylelint-config-standard": "^37.0.0",
+        "stylelint-order": "^6.0.4",
+        "typescript": "^5.8.2",
+        "vite": "^6.2.3"
+    },
+    "dependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    }
 }

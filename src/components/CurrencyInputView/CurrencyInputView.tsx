@@ -1,5 +1,5 @@
 import { TextField, CircularProgress, Button } from '@mui/material'
-import { useState, MouseEvent, memo } from 'react'
+import { useState, MouseEvent, memo, useCallback } from 'react'
 
 import { coinsStore } from '@/stores'
 
@@ -25,23 +25,24 @@ export const CurrencyInputView = memo(
         handleAmountChange,
         handleCurrencySelect,
         setSearchTerm,
-        debouncedSearch,
     }: CurrencyInputViewProps) => {
         const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
         const isDropdownOpen = Boolean(anchorEl)
 
-        const coins = coinsStore.getFilteredCoins(debouncedSearch, type)
+        const coins = coinsStore.getFilteredCoins(searchTerm, type)
+
         const loading = coinsStore.loading
 
-        const handleOpen = (event: MouseEvent<HTMLButtonElement>) => {
-            if (!loading && coins.length) {
-                setAnchorEl(event.currentTarget)
-            }
-        }
+        const handleOpen = useCallback(
+            (event: MouseEvent<HTMLButtonElement>) => {
+                if (!loading && coins.length) {
+                    setAnchorEl(event.currentTarget)
+                }
+            },
+            [loading, coins.length],
+        )
 
-        const handleClose = () => {
-            setAnchorEl(null)
-        }
+        const handleClose = useCallback(() => setAnchorEl(null), [])
 
         return (
             <div style={containerStyles}>

@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 
 import { coinsStore, exchangeStore } from '@/stores'
-import { DEBOUNCE_DELAY, MAX_DECIMALS } from '@/constants/settings'
+import { MAX_DECIMALS } from '@/constants/settings'
 import { sanitizeCurrencyInput } from '@/utils/sanitizeCurrencyInput'
 import { formatDisplayValue } from '@/utils/formatDisplayValue'
-import { useDebounce } from '@/hooks/useDebounce'
 
 export const useCurrencyInput = (type: 'from' | 'to') => {
     const {
@@ -22,7 +21,6 @@ export const useCurrencyInput = (type: 'from' | 'to') => {
     const { coins } = coinsStore
 
     const [searchTerm, setSearchTerm] = useState('')
-    const debouncedSearch = useDebounce(searchTerm, DEBOUNCE_DELAY)
 
     const currentCurrency = type === 'from' ? fromCurrency : toCurrency
     const setCurrentCurrency = type === 'from' ? setFromCurrency : setToCurrency
@@ -66,7 +64,6 @@ export const useCurrencyInput = (type: 'from' | 'to') => {
         searchTerm,
         handleAmountChange,
         handleCurrencySelect,
-        debouncedSearch,
         setSearchTerm,
         coinsEmpty: !coins.length,
     }

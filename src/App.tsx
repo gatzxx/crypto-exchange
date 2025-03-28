@@ -1,7 +1,12 @@
+import { ExchangeForm } from '@/components/ExchangeForm/ExchangeForm'
+
+import styles from './App.module.css'
+
 export const App = () => {
     return (
-        <main>
-            <h1>Crypto Exchange</h1>
-        </main>
+        <div className={styles.appContainer}>
+            <h1 className={styles.title}>Crypto Exchange</h1>
+            <ExchangeForm />
+        </div>
     )
 }

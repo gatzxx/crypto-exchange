@@ -2,6 +2,7 @@
     "extends": ["stylelint-config-standard"],
     "rules": {
         "block-no-empty": true,
-        "color-hex-length": "short"
+        "color-hex-length": "short",
+        "selector-class-pattern": null
     }
 }

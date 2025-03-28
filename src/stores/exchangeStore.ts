@@ -1,7 +1,5 @@
 import { action, makeAutoObservable, runInAction } from 'mobx'
-
 import { coinsStore } from '@/stores'
-
 import { EXCHANGE_CACHE_TTL, LOCAL_STORAGE_EXCHANGE_KEY } from '@/constants/settings'
 import { getConversionRate } from '@/api/conversion'
 
@@ -16,10 +14,6 @@ class ExchangeStore {
 
     constructor() {
         makeAutoObservable(this, {
-            setAmount: action.bound,
-            setFromCurrency: action.bound,
-            setToCurrency: action.bound,
-            swapCurrencies: action.bound,
             fetchConversion: action.bound,
         })
 
@@ -28,23 +22,24 @@ class ExchangeStore {
 
     private loadState() {
         try {
-            const savedState = localStorage.getItem(LOCAL_STORAGE_EXCHANGE_KEY)
-            if (!savedState) return
+            const data = localStorage.getItem(LOCAL_STORAGE_EXCHANGE_KEY)
+            if (!data) return
 
-            const { fromCurrency, toCurrency, amount, result } = JSON.parse(savedState)
+            const {
+                fromCurrency = 'BTC',
+                toCurrency = 'ETH',
+                amount = 1,
+                result,
+            } = JSON.parse(data)
 
             runInAction(() => {
-                this.fromCurrency = fromCurrency || 'BTC'
-                this.toCurrency = toCurrency || 'ETH'
-                this.amount = amount || 1
-                this.result = result || (fromCurrency === toCurrency ? amount : 1)
+                this.fromCurrency = fromCurrency
+                this.toCurrency = toCurrency
+                this.amount = amount
+                this.result = result ?? (fromCurrency === toCurrency ? amount : 1)
             })
 
-            if (!coinsStore.coins.length) {
-                coinsStore.fetchCoins()
-            } else {
-                this.fetchConversion(this.amount)
-            }
+            coinsStore.coins.length ? this.fetchConversion(this.amount) : coinsStore.fetchCoins()
         } catch (error) {
             console.error('Ошибка загрузки из localStorage:', error)
         }
@@ -52,14 +47,10 @@ class ExchangeStore {
 
     private saveState() {
         try {
+            const { fromCurrency, toCurrency, amount, result } = this
             localStorage.setItem(
                 LOCAL_STORAGE_EXCHANGE_KEY,
-                JSON.stringify({
-                    fromCurrency: this.fromCurrency,
-                    toCurrency: this.toCurrency,
-                    amount: this.amount,
-                    result: this.result,
-                }),
+                JSON.stringify({ fromCurrency, toCurrency, amount, result }),
             )
         } catch (error) {
             console.error('Ошибка сохранения в localStorage:', error)
@@ -67,15 +58,7 @@ class ExchangeStore {
     }
 
     async fetchConversion(amount = this.amount) {
-        if (amount <= 0) return
-
-        if (this.fromCurrency === this.toCurrency) {
-            runInAction(() => {
-                this.result = amount
-                this.saveState()
-            })
-            return
-        }
+        if (amount <= 0 || this.fromCurrency === this.toCurrency) return
 
         const cacheKey = `${this.fromCurrency}_${this.toCurrency}`
         const cachedRate = this.ratesCache.get(cacheKey)
@@ -89,23 +72,27 @@ class ExchangeStore {
         }
 
         try {
-            this.loading = true
+            runInAction(() => {
+                this.loading = true
+            })
+
             const fromId = coinsStore.getCoinIdBySymbol(this.fromCurrency)
             const toId = coinsStore.getCoinIdBySymbol(this.toCurrency)
-
             if (!fromId || !toId) throw new Error('Некорректные валюты')
 
             const rate = await getConversionRate({ from: fromId, to: toId, fromAmount: 1 })
 
             runInAction(() => {
-                this.result = rate * amount
                 this.ratesCache.set(cacheKey, { rate, timestamp: Date.now() })
-                this.loading = false
+                this.result = rate * amount
                 this.saveState()
             })
         } catch (error) {
             runInAction(() => {
                 this.error = `Ошибка конвертации: ${error instanceof Error ? error.message : String(error)}`
+            })
+        } finally {
+            runInAction(() => {
                 this.loading = false
             })
         }
@@ -119,9 +106,7 @@ class ExchangeStore {
             this.saveState()
         })
 
-        if (this.fromCurrency !== this.toCurrency && value > 0) {
-            this.fetchConversion(value)
-        }
+        this.fetchConversion(value)
     }
 
     setFromCurrency = (symbol: string) => {
@@ -129,9 +114,8 @@ class ExchangeStore {
             this.fromCurrency = symbol
             this.saveState()
         })
-        if (this.fromCurrency !== this.toCurrency) {
-            this.fetchConversion()
-        }
+
+        this.fetchConversion()
     }
 
     setToCurrency = (symbol: string) => {
@@ -139,9 +123,8 @@ class ExchangeStore {
             this.toCurrency = symbol
             this.saveState()
         })
-        if (this.fromCurrency !== this.toCurrency) {
-            this.fetchConversion()
-        }
+
+        this.fetchConversion()
     }
 
     swapCurrencies = () => {
@@ -149,9 +132,8 @@ class ExchangeStore {
             ;[this.fromCurrency, this.toCurrency] = [this.toCurrency, this.fromCurrency]
             this.saveState()
         })
-        if (this.fromCurrency !== this.toCurrency) {
-            this.fetchConversion()
-        }
+
+        this.fetchConversion()
     }
 }
 

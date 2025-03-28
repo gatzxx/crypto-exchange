@@ -1,2 +1,2 @@
-export { coinsStore } from './coinsStore'
-export { exchangeStore } from './exchangeStore'
+export { coinsStore } from './CoinsStore/coinsStore'
+export { exchangeStore } from './ExchangeStore/exchangeStore'

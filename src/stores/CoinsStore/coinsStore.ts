@@ -5,7 +5,7 @@ import { exchangeStore } from '@/stores'
 import { getCoins } from '@/api/coins'
 import { Coin } from '@/api/types'
 
-class CoinsStore {
+export class CoinsStore {
     coins: Coin[] = []
     loading: boolean = false
     error: string | null = null

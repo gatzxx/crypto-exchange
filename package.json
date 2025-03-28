@@ -14,7 +14,9 @@
         "lint:fix": "eslint --ext .js,.ts,.jsx,.tsx . --fix",
         "stylelint": "stylelint \"src/**/*.{css,scss}\"",
         "stylelint:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
-        "fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run stylelint:fix"
+        "fix": "pnpm run format:fix && pnpm run lint:fix && pnpm run stylelint:fix",
+        "test": "vitest",
+        "test:watch": "vitest --watch"
     },
     "keywords": [
         "crypto",
@@ -26,11 +28,16 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@testing-library/jest-dom": "^6.6.3",
+        "@testing-library/react": "^16.2.0",
+        "@types/node": "^22.13.14",
         "@types/react": "^19.0.12",
         "@types/react-dom": "^19.0.4",
         "@typescript-eslint/eslint-plugin": "^8.28.0",
         "@typescript-eslint/parser": "^8.28.0",
         "@vitejs/plugin-react": "^4.3.4",
+        "@vitest/spy": "^3.0.9",
+        "@vitest/ui": "^3.0.9",
         "eslint": "^9.23.0",
         "eslint-config-prettier": "^10.1.1",
         "eslint-plugin-import": "^2.31.0",
@@ -38,12 +45,14 @@
         "eslint-plugin-react": "^7.37.4",
         "eslint-plugin-react-hooks": "^5.2.0",
         "husky": "^9.1.7",
+        "jsdom": "^26.0.0",
         "prettier": "^3.5.3",
         "stylelint": "^16.17.0",
         "stylelint-config-standard": "^37.0.0",
         "stylelint-order": "^6.0.4",
         "typescript": "^5.8.2",
-        "vite": "^6.2.3"
+        "vite": "^6.2.3",
+        "vitest": "^3.0.9"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",

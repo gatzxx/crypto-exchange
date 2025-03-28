@@ -3,7 +3,7 @@ import { coinsStore } from '@/stores'
 import { EXCHANGE_CACHE_TTL, LOCAL_STORAGE_EXCHANGE_KEY } from '@/constants/settings'
 import { getConversionRate } from '@/api/conversion'
 
-class ExchangeStore {
+export class ExchangeStore {
     fromCurrency: string = ''
     toCurrency: string = ''
     amount: number = 1

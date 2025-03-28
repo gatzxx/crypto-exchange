@@ -36,10 +36,10 @@ class ExchangeStore {
                 this.fromCurrency = fromCurrency
                 this.toCurrency = toCurrency
                 this.amount = amount
-                this.result = result ?? (fromCurrency === toCurrency ? amount : 1)
+                this.result = result ?? 1
             })
 
-            coinsStore.coins.length ? this.fetchConversion(this.amount) : coinsStore.fetchCoins()
+            coinsStore.coins.length ? this.fetchConversion() : coinsStore.fetchCoins()
         } catch (error) {
             console.error('Ошибка загрузки из localStorage:', error)
         }
@@ -57,15 +57,20 @@ class ExchangeStore {
         }
     }
 
-    async fetchConversion(amount = this.amount) {
-        if (amount <= 0 || this.fromCurrency === this.toCurrency) return
+    async fetchConversion() {
+        if (this.fromCurrency === this.toCurrency) {
+            runInAction(() => {
+                this.result = 1
+            })
+            return
+        }
 
         const cacheKey = `${this.fromCurrency}_${this.toCurrency}`
         const cachedRate = this.ratesCache.get(cacheKey)
 
         if (cachedRate && Date.now() - cachedRate.timestamp < EXCHANGE_CACHE_TTL) {
             runInAction(() => {
-                this.result = cachedRate.rate * amount
+                this.result = cachedRate.rate
                 this.saveState()
             })
             return
@@ -91,7 +96,7 @@ class ExchangeStore {
 
             runInAction(() => {
                 this.ratesCache.set(cacheKey, { rate, timestamp: Date.now() })
-                this.result = rate * amount
+                this.result = rate
                 this.saveState()
             })
         } catch (error) {
@@ -105,15 +110,22 @@ class ExchangeStore {
         }
     }
 
-    setAmount = (value: number) => {
+    setAmount = (value: number, isManualInput = false, inputType: 'from' | 'to' = 'from') => {
         if (value < 0) return
 
+        let baseAmount = value
+        if (inputType === 'to' && this.result) {
+            baseAmount = value / this.result
+        }
+
         runInAction(() => {
-            this.amount = value
+            this.amount = baseAmount
             this.saveState()
         })
 
-        this.fetchConversion(value)
+        if (!isManualInput) {
+            this.fetchConversion()
+        }
     }
 
     setFromCurrency = (symbol: string) => {

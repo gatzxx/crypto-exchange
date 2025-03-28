@@ -1,5 +1,5 @@
 import { Box, MenuItem, Paper, Popper, TextField, ClickAwayListener } from '@mui/material'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { coinsStore } from '@/stores'
 
@@ -33,13 +33,10 @@ export const CurrencyDropdown = memo(
         anchorEl,
         onClose,
     }: CurrencyDropdownProps) => {
-        const handleSelect = useCallback(
-            (symbol: string) => {
-                onSelect(symbol)
-                onClose()
-            },
-            [onSelect, onClose],
-        )
+        const handleSelect = (symbol: string) => {
+            onSelect(symbol)
+            onClose()
+        }
 
         const filteredCoins = useMemo(
             () => coins.filter((coin) => coin.symbol.toLowerCase().includes(search.toLowerCase())),

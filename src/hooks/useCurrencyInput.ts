@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
+import { coinsStore, exchangeStore } from '@/stores'
 import { DEBOUNCE_DELAY, MAX_DECIMALS } from '@/constants/settings'
 import { sanitizeCurrencyInput } from '@/utils/sanitizeCurrencyInput'
 import { formatDisplayValue } from '@/utils/formatDisplayValue'
-import { exchangeStore } from '@/stores/exchangeStore'
 import { useDebounce } from '@/hooks/useDebounce'
 
 export const useCurrencyInput = (type: 'from' | 'to') => {
     const {
-        coins,
         result,
         loading,
         fromCurrency,
@@ -20,70 +19,55 @@ export const useCurrencyInput = (type: 'from' | 'to') => {
         fetchConversion,
     } = exchangeStore
 
-    const [localValue, setLocalValue] = useState('')
-    const [searchTerm, setSearchTerm] = useState('')
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const { coins } = coinsStore
 
+    const [searchTerm, setSearchTerm] = useState('')
     const debouncedSearch = useDebounce(searchTerm, DEBOUNCE_DELAY)
+
     const currentCurrency = type === 'from' ? fromCurrency : toCurrency
     const setCurrentCurrency = type === 'from' ? setFromCurrency : setToCurrency
 
-    useEffect(() => {
-        if (storeAmount < 0) return
+    const localValue = useMemo(() => {
         const displayValue = type === 'from' ? storeAmount : storeAmount * (result || 1)
-        setLocalValue(formatDisplayValue(displayValue))
+        return formatDisplayValue(displayValue)
     }, [storeAmount, result, type])
 
-    const handleAmountChange = useCallback(
-        (value: string) => {
-            const sanitizedValue = sanitizeCurrencyInput(value)
-            const decimalDigits = sanitizedValue.split('.')[1]?.length || 0
+    const handleAmountChange = (value: string) => {
+        const sanitizedValue = sanitizeCurrencyInput(value)
+        const decimalDigits = sanitizedValue.split('.')[1]?.length || 0
+        if (decimalDigits > MAX_DECIMALS) return
 
-            if (decimalDigits > MAX_DECIMALS) return
+        const numericValue = parseFloat(sanitizedValue) || 0
+        const baseAmount = type === 'from' ? numericValue : numericValue / (result || 1)
 
-            setLocalValue(sanitizedValue)
-            const numericValue = parseFloat(sanitizedValue) || 0
-            const baseAmount = type === 'from' ? numericValue : numericValue / (result || 1)
+        if (baseAmount !== storeAmount) {
+            setAmount(baseAmount)
+        }
+    }
 
-            if (numericValue !== storeAmount) {
-                setAmount(baseAmount)
-            }
-        },
-        [type, result, setAmount, storeAmount],
-    )
+    const handleCurrencySelect = (symbol: string) => {
+        if (symbol !== currentCurrency) {
+            setCurrentCurrency(symbol)
+            fetchConversion()
+        }
+        setSearchTerm('')
+    }
 
-    const handleCurrencySelect = useCallback(
-        (symbol: string) => {
-            if (symbol !== currentCurrency) {
-                setCurrentCurrency(symbol)
-                fetchConversion()
-            }
-            setIsDropdownOpen(false)
-            setSearchTerm('')
-        },
-        [currentCurrency, setCurrentCurrency, fetchConversion],
-    )
-
-    const filteredCoins = useMemo(() => {
-        if (!debouncedSearch) return coins
-        const term = debouncedSearch.toLowerCase()
-        return coins.filter(
-            (coin) =>
-                coin.symbol.toLowerCase().includes(term) || coin.name.toLowerCase().includes(term),
-        )
-    }, [coins, debouncedSearch])
+    useEffect(() => {
+        if (!currentCurrency && coins.length) {
+            setCurrentCurrency(type === 'from' ? 'BTC' : 'ETH')
+        }
+    }, [coins, currentCurrency, setCurrentCurrency, type])
 
     return {
         localValue,
         currentCurrency,
         loading,
-        filteredCoins,
-        isDropdownOpen,
         searchTerm,
         handleAmountChange,
         handleCurrencySelect,
+        debouncedSearch,
         setSearchTerm,
-        toggleDropdown: () => setIsDropdownOpen((v) => !v),
         coinsEmpty: !coins.length,
     }
 }

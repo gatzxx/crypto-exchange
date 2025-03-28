@@ -1,14 +1,18 @@
+import { Box, Button } from '@mui/material'
 import { observer } from 'mobx-react-lite'
 import { useEffect } from 'react'
 
-import { CurrencyInput } from '@/components/CurrencyInput/CurrencyInput'
-import { exchangeStore } from '@/stores/exchangeStore'
+import { coinsStore, exchangeStore } from '@/stores'
 
-import styles from './ExchangeForm.module.css'
+import {
+    buttonContainerStyles,
+    containerStyles,
+} from '@/components/ExchangeForm/ExchangeForm.styles'
+import { CurrencyInput } from '@/components/CurrencyInput/CurrencyInput'
 
 export const ExchangeForm = observer(() => {
     useEffect(() => {
-        exchangeStore.fetchCoins()
+        coinsStore.fetchCoins()
     }, [])
 
     const handleSwapCurrencies = () => {
@@ -16,16 +20,21 @@ export const ExchangeForm = observer(() => {
     }
 
     return (
-        <div className={styles.exchangeForm}>
+        <Box sx={containerStyles}>
             <CurrencyInput type='from' />
-            <button
-                onClick={handleSwapCurrencies}
-                className={styles.swapButton}
-                aria-label='Swap currencies'
-            >
-                ⇄
-            </button>
+
+            <Box sx={buttonContainerStyles}>
+                <Button
+                    onClick={handleSwapCurrencies}
+                    variant='outlined'
+                    color='primary'
+                    size='small'
+                >
+                    ⇄
+                </Button>
+            </Box>
+
             <CurrencyInput type='to' />
-        </div>
+        </Box>
     )
 })

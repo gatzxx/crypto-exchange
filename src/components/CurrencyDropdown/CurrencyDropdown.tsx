@@ -1,45 +1,81 @@
-import { exchangeStore } from '@/stores/exchangeStore'
+import { Box, MenuItem, Paper, Popper, TextField, ClickAwayListener } from '@mui/material'
+import { memo, useCallback } from 'react'
 
-import styles from './CurrencyDropdown.module.css'
+import { coinsStore } from '@/stores'
+
+import {
+    popperStyles,
+    paperStyles,
+    menuItemStyles,
+    textFieldStyles,
+    popperModifiers,
+} from './CurrencyDropdown.styles'
 
 interface CurrencyDropdownProps {
     isOpen: boolean
     search: string
     onSearchChange: (value: string) => void
-    coins: typeof exchangeStore.coins
+    coins: typeof coinsStore.coins
     selectedCurrency: string
     onSelect: (symbol: string) => void
+    anchorEl: HTMLElement | null
+    onClose: () => void
 }
 
-export const CurrencyDropdown = ({
-    isOpen,
-    search,
-    onSearchChange,
-    coins,
-    selectedCurrency,
-    onSelect,
-}: CurrencyDropdownProps) =>
-    isOpen ? (
-        <div className={styles.dropdown}>
-            <input
-                type='text'
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder='Поиск валюты...'
-                className={styles.searchInput}
-            />
-            <div className={styles.coinList}>
-                {coins.map((coin) => (
-                    <div
-                        key={coin.id}
-                        onClick={() => onSelect(coin.symbol)}
-                        className={`${styles.coinItem} ${
-                            selectedCurrency === coin.symbol ? styles.selected : ''
-                        }`}
-                    >
-                        {coin.symbol} - {coin.name}
-                    </div>
-                ))}
-            </div>
-        </div>
-    ) : null
+export const CurrencyDropdown = memo(
+    ({
+        isOpen,
+        search,
+        onSearchChange,
+        coins,
+        selectedCurrency,
+        onSelect,
+        anchorEl,
+        onClose,
+    }: CurrencyDropdownProps) => {
+        const handleSelect = useCallback(
+            (symbol: string) => {
+                onSelect(symbol)
+                onClose()
+            },
+            [onSelect, onClose],
+        )
+
+        const filteredCoins = coins.filter((coin) =>
+            coin.symbol.toLowerCase().includes(search.toLowerCase()),
+        )
+
+        return (
+            <Popper
+                open={isOpen}
+                anchorEl={anchorEl}
+                placement='bottom-start'
+                modifiers={popperModifiers}
+                sx={popperStyles}
+            >
+                <ClickAwayListener onClickAway={onClose}>
+                    <Paper sx={paperStyles}>
+                        <TextField
+                            {...textFieldStyles}
+                            value={search}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            placeholder='Поиск валюты...'
+                        />
+                        <Box sx={{ mt: 1 }}>
+                            {filteredCoins.map((coin) => (
+                                <MenuItem
+                                    key={coin.id}
+                                    onClick={() => handleSelect(coin.symbol)}
+                                    selected={selectedCurrency === coin.symbol}
+                                    sx={menuItemStyles}
+                                >
+                                    {coin.symbol} - {coin.name}
+                                </MenuItem>
+                            ))}
+                        </Box>
+                    </Paper>
+                </ClickAwayListener>
+            </Popper>
+        )
+    },
+)

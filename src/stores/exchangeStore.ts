@@ -1,19 +1,17 @@
 import { action, makeAutoObservable, runInAction } from 'mobx'
 
+import { coinsStore } from '@/stores'
+
 import { EXCHANGE_CACHE_TTL, LOCAL_STORAGE_EXCHANGE_KEY } from '@/constants/settings'
 import { getConversionRate } from '@/api/conversion'
-import { getCoins } from '@/api/coins'
-import { Coin } from '@/api/types'
 
 class ExchangeStore {
-    coins: Coin[] = []
     fromCurrency: string = ''
     toCurrency: string = ''
     amount: number = 1
     result: number = 1
     loading: boolean = false
     error: string | null = null
-
     private ratesCache = new Map<string, { rate: number; timestamp: number }>()
 
     constructor() {
@@ -39,8 +37,14 @@ class ExchangeStore {
                 this.fromCurrency = fromCurrency || 'BTC'
                 this.toCurrency = toCurrency || 'ETH'
                 this.amount = amount || 1
-                this.result = result || 1
+                this.result = result || (fromCurrency === toCurrency ? amount : 1)
             })
+
+            if (!coinsStore.coins.length) {
+                coinsStore.fetchCoins()
+            } else {
+                this.fetchConversion(this.amount)
+            }
         } catch (error) {
             console.error('Ошибка загрузки из localStorage:', error)
         }
@@ -62,30 +66,16 @@ class ExchangeStore {
         }
     }
 
-    async fetchCoins() {
-        this.loading = true
-        try {
-            const data = await getCoins()
-            runInAction(() => {
-                this.coins = data
-                if (!this.fromCurrency) this.fromCurrency = data[0]?.symbol || 'BTC'
-                if (!this.toCurrency) this.toCurrency = data[1]?.symbol || 'ETH'
-                this.loading = false
-            })
-            await this.fetchConversion()
-        } catch (error) {
-            runInAction(() => {
-                this.error = `Ошибка загрузки: ${error instanceof Error ? error.message : String(error)}`
-                this.loading = false
-            })
-        }
-    }
-
-    private getCoinIdBySymbol = (symbol: string): string | null =>
-        this.coins.find((c) => c.symbol === symbol)?.id?.toString() ?? null
-
     async fetchConversion(amount = this.amount) {
         if (amount <= 0) return
+
+        if (this.fromCurrency === this.toCurrency) {
+            runInAction(() => {
+                this.result = amount
+                this.saveState()
+            })
+            return
+        }
 
         const cacheKey = `${this.fromCurrency}_${this.toCurrency}`
         const cachedRate = this.ratesCache.get(cacheKey)
@@ -99,8 +89,9 @@ class ExchangeStore {
         }
 
         try {
-            const fromId = this.getCoinIdBySymbol(this.fromCurrency)
-            const toId = this.getCoinIdBySymbol(this.toCurrency)
+            this.loading = true
+            const fromId = coinsStore.getCoinIdBySymbol(this.fromCurrency)
+            const toId = coinsStore.getCoinIdBySymbol(this.toCurrency)
 
             if (!fromId || !toId) throw new Error('Некорректные валюты')
 
@@ -109,22 +100,28 @@ class ExchangeStore {
             runInAction(() => {
                 this.result = rate * amount
                 this.ratesCache.set(cacheKey, { rate, timestamp: Date.now() })
+                this.loading = false
                 this.saveState()
             })
         } catch (error) {
             runInAction(() => {
                 this.error = `Ошибка конвертации: ${error instanceof Error ? error.message : String(error)}`
+                this.loading = false
             })
         }
     }
 
     setAmount = (value: number) => {
-        if (value <= 0) return
+        if (value < 0) return
+
         runInAction(() => {
             this.amount = value
             this.saveState()
         })
-        this.fetchConversion()
+
+        if (this.fromCurrency !== this.toCurrency && value > 0) {
+            this.fetchConversion(value)
+        }
     }
 
     setFromCurrency = (symbol: string) => {
@@ -132,7 +129,9 @@ class ExchangeStore {
             this.fromCurrency = symbol
             this.saveState()
         })
-        this.fetchConversion()
+        if (this.fromCurrency !== this.toCurrency) {
+            this.fetchConversion()
+        }
     }
 
     setToCurrency = (symbol: string) => {
@@ -140,7 +139,9 @@ class ExchangeStore {
             this.toCurrency = symbol
             this.saveState()
         })
-        this.fetchConversion()
+        if (this.fromCurrency !== this.toCurrency) {
+            this.fetchConversion()
+        }
     }
 
     swapCurrencies = () => {
@@ -148,7 +149,9 @@ class ExchangeStore {
             ;[this.fromCurrency, this.toCurrency] = [this.toCurrency, this.fromCurrency]
             this.saveState()
         })
-        this.fetchConversion()
+        if (this.fromCurrency !== this.toCurrency) {
+            this.fetchConversion()
+        }
     }
 }
 

@@ -71,14 +71,21 @@ class ExchangeStore {
             return
         }
 
+        const fromId = coinsStore.getCoinIdBySymbol(this.fromCurrency)
+        const toId = coinsStore.getCoinIdBySymbol(this.toCurrency)
+
+        if (!fromId || !toId) {
+            runInAction(() => {
+                this.error = 'Некорректные валюты'
+            })
+            return
+        }
+
         try {
             runInAction(() => {
                 this.loading = true
+                this.error = null
             })
-
-            const fromId = coinsStore.getCoinIdBySymbol(this.fromCurrency)
-            const toId = coinsStore.getCoinIdBySymbol(this.toCurrency)
-            if (!fromId || !toId) throw new Error('Некорректные валюты')
 
             const rate = await getConversionRate({ from: fromId, to: toId, fromAmount: 1 })
 
